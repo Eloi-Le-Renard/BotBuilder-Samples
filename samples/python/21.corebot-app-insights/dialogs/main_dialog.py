@@ -21,6 +21,11 @@ from flight_booking_recognizer import FlightBookingRecognizer
 from helpers.luis_helper import LuisHelper, Intent
 from .booking_dialog import BookingDialog
 
+# TODO try exception to trigger alert
+import logging
+from opencensus.ext.azure.log_exporter import AzureLogHandler
+
+
 
 class MainDialog(ComponentDialog):
     def __init__(
@@ -105,12 +110,20 @@ class MainDialog(ComponentDialog):
 
         else:
             didnt_understand_text = (
-                "Sorry, I didn't get that. Please try asking in a different way"
+                "Sorry, I didn't get that. Please try asking in a different way (exception)"
             )
             didnt_understand_message = MessageFactory.text(
                 didnt_understand_text, didnt_understand_text, InputHints.ignoring_input
             )
-            await step_context.context.send_activity(didnt_understand_message)
+            
+            # TODO try exception to trigger alert
+            logger = logging.getLogger(__name__)
+            logger.addHandler(AzureLogHandler(connection_string='InstrumentationKey=d97277b9-e6dc-46a1-b8db-03c0d49332c5'))
+            try:
+                a = 1/0
+            except Exception:
+                logger.exception(Exception)
+                await step_context.context.send_activity(didnt_understand_message)
 
         return await step_context.next(None)
 
